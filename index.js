@@ -5,6 +5,18 @@ var attr = require('attr')
 var type = require('type')
 
 /**
+ * mix in properties
+ *
+ * @api private
+ */
+function mixin(target, source) {
+  for (var key in source) {
+    target[key] = source[key]
+  }
+  return target
+}
+
+/**
  * Expose `Model`.
  */
 
@@ -26,9 +38,17 @@ module.exports = Model
  */
 
 function Model(data) {
-  this.attributes = {}
+  if (!(this instanceof Model)) {
+    return mixin(data, Model.prototype)
+  }
+  this.initializeModel(data)
+}
+
+Model.prototype.initializeModel = function initializeModel(data) {
   data = data || {}
+  this.attributes = this.attributes || {}
   this.set(data)
+
 }
 
 Emitter(Model.prototype)
