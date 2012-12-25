@@ -3,7 +3,6 @@ var assert = require('timoxley-assert')
 
 var model
 
-
 describe('mixin', function() {
   it('can mix into existing objects', function() {
     var User = function(data) {
