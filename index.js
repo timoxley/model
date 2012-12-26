@@ -5,7 +5,7 @@ var attr = require('attr')
 var type = require('type')
 
 /**
- * mix in properties
+ * mix properties in
  *
  * @api private
  */
@@ -22,16 +22,25 @@ function mixin(target, source) {
 
 module.exports = Model
 
-/**
- * Initialize a new `Model` with `data` properties.
- * ```js
- * var Model = require('model')
+/**  Initialize a new `Model` with `data` properties, or use as a mixin.
+ *  ```js
+ *  var Model = require('model')
  *
- * var user = new Model({
- *   name: 'Tim',
- *   age: 27
- * })
- * ```
+ *  var user = new Model({
+ *    name: 'Tim',
+ *    age: 27
+ *  })
+ *
+ *  // or as a mixin:
+ *
+ *  var User = function(data) {
+ *    this.set('name', data.name)
+ *    this.set('age', data.age)
+ *  }
+ *
+ *  Model(User.prototype)
+ *
+ *  ```
  *
  * @param data
  * @api public

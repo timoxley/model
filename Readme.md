@@ -11,7 +11,7 @@
 
 ### Model()
 
-  Initialize a new `Model` with `data` properties.
+  Initialize a new `Model` with `data` properties, or use as a mixin.
   ```js
   var Model = require('model')
 
@@ -19,6 +19,16 @@
     name: 'Tim',
     age: 27
   })
+
+  // or as a mixin:
+
+  var User = function(data) {
+    this.set('name', data.name)
+    this.set('age', data.age)
+  }
+
+  Model(User.prototype)
+
   ```
 
 ### Model#get(name:String)
