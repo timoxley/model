@@ -1,8 +1,6 @@
 'use strict'
 
 var Emitter = require('emitter')
-var attr = require('attr')
-var type = require('type')
 
 require('watch')
 
