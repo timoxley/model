@@ -4,6 +4,8 @@ var Emitter = require('emitter')
 var attr = require('attr')
 var type = require('type')
 
+require('watch')
+
 /**
  * mix properties in
  *
@@ -22,172 +24,73 @@ function mixin(target, source) {
 
 module.exports = Model
 
-/**  Initialize a new `Model` with `data` properties, or use as a mixin.
- *  ```js
- *  var Model = require('model')
+/**
+ * Take a constructor and return a new
+ * constructor that will create Model
+ * enhanced instances of said constructor.
  *
- *  var user = new Model({
- *    name: 'Tim',
- *    age: 27
+ * Call `.attr` on returned Function to define
+ * the names of the model properties.
+ *
+ * ```js
+ * var Stock = function(options) {
+ *   options = options || {}
+ *   this.value = options.value
+ *   this.name = options.name
+ * }
+ *
+ * // Enhance Stock constructor with Model
+ * Stock = Model(Stock)
+ *   .attr('value')
+ *   .attr('name')
+ *
+ * // Generate new instance exactly as normal.
+ * var AAPL = new Stock({
+ *    value: 100,
+ *    name: 'AAPL'
  *  })
  *
- *  // or as a mixin:
+ *  AAPL.on('change value', function(newValue, oldValue) {
+ *    console.log('AAPL value changed from %d to %d!', oldValue, newValue)
+ *  })
  *
- *  var User = function(data) {
- *    this.set('name', data.name)
- *    this.set('age', data.age)
- *  }
- *
- *  Model(User.prototype)
- *
- *  ```
- *
- * @param data
+ *  // Note: no stupid .get() or .set() BS :D
+ *  AAPL.value = 200
+ *  // => AAPL value changed from 100 to 200!
+ * ```
+ * @param {Function} constructor
+ * @return {Function}
  * @api public
  */
 
-function Model(data) {
-  if (!(this instanceof Model)) {
-    return mixin(data, Model.prototype)
+function Model(constructor) {
+  constructor = constructor || function() {}
+  function Type() {
+    constructor.apply(this, arguments)
+    this.constructor = constructor
+    for (var i = 0; i < Type.attrs.length; i++) {
+      watchProperty(this, Type.attrs[i])
+    }
   }
-  this.initializeModel(data)
-}
-
-Model.prototype.initializeModel = function initializeModel(data) {
-  data = data || {}
-  this.attributes = this.attributes || {}
-  this.set(data)
-
-}
-
-Emitter(Model.prototype)
-
-/**
- * Get the value of Model property specified by `name`
- * or if `name` is not supplied, return the
- * whole current model.
- *
- * ```js
- * var model = new Model({
- *   name: 'Tim'
- * })
- * model.get('name') //=> 'Tim'
- * ```
- *
- * @param {String} name
- * @return {Mixed}
- * @api public
- */
-
-Model.prototype.get = function(name) {
-  if (!arguments.length) return this.getAll()
-  return this.getProperty(name)
+  Type.attrs = []
+  Type.attr = function(name) {
+    Type.attrs.push(name)
+    return Type
+  }
+  Emitter(Type.prototype)
+  return Type
 }
 
 /**
- * Set a property specified by `name` to `value` or
- * if supplied an `Object`, add or update properties
- * on the model, as specified by the given `Object`.
+ * Watch property `name` on object `context`.
  *
- * Will trigger `change` events on the model if
- * the model changes.
- *
- * ```js
- * var model = new Model({
- *   name: 'Tim'
- * })
- *
- * model.set('name', 'Tim Oxley')
- *
- * model.set({
- *   age: 27
- * )
- *
- * model.get('name') //=> 'Tim Oxley'
- * model.get('age') //=> 27
- * ```
-
+ * @param {Object} context
  * @param {String} name
- * @return {Mixed}
- * @api public
- */
-
-Model.prototype.set = function(name, value) {
-  if (type(name) === 'object') return this.update(name)
-  return this.setProperty(name, value)
-}
-
-/**
- * Get a property value specified by `name`.
- *
- * @param {String} name
- * @return {Mixed}
  * @api private
  */
 
-Model.prototype.getProperty = function(name) {
-  if (!name) return this.getAll()
-  var attribute = this.attributes[name]
-  if (!attribute) return undefined
-  return attribute()
-}
-
-/**
- * Set a property specified by `name` to `value`.
- * Will trigger `change` events on the model if
- * the model does change.
- *
- * @param {String} name
- * @param {Mixed} value
- * @return {Model}
- * @api private
- */
-
-Model.prototype.setProperty = function(name, value) {
-  if (type(name) !== 'string') throw new Error('attribute name must be a string')
-  if (arguments.length !== 2) throw new Error('must supply a value for ' + name)
-
-  var attribute = this.attributes[name] = this.attributes[name] || attr(name)
-  var self = this
-  attribute.on('change', function(newVal, oldVal) {
-    self.emit('change', name, newVal, oldVal)
+function watchProperty(context, name) {
+  context.watch(name, function(prop, oldVal, newVal){
+    context.emit('change ' + prop, newVal, oldVal)
   })
-
-  attribute(value)
-  return this
-}
-
-/**
- * Add or update properties on this model, as specified
- * by the keys and values in `updated`.
- *
- * @param {Object} updated
- * @return {Model}
- * @api private
- */
-
-Model.prototype.update = function(updated) {
-  for (var key in updated) {
-    if (updated.hasOwnProperty(key)) {
-      this.set(key, updated[key])
-    }
-  }
-  return this
-}
-
-/**
- * Get all properties of this model as a simple Object.
- *
- * @return {Object}
- * @api private
- */
-
-Model.prototype.getAll = function() {
-  var result = {}
-  for (var key in this.attributes) {
-    if (this.attributes.hasOwnProperty(key)) {
-      result[key] = this.get(key)
-    }
-  }
-  return result
 }

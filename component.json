@@ -6,11 +6,12 @@
   "keywords": [],
   "dependencies": {
     "component/emitter": "*",
-    "weepy/attr": "*",
-    "timoxley/assert": "*",
-    "component/type": "*"
+    "brynbellomy/watch": "*",
   },
-  "development": {},
+  "development": {
+    "timoxley/assert": "*",
+    "timoxley/reactive": "*"
+  },
   "license": "MIT",
   "scripts": [
     "index.js"
