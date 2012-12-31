@@ -3,6 +3,11 @@
 
   Simple Data Models
 
+## DEPRECATED
+
+  See [timoxley/react](http://github.com/timoxley/react) for a cleaner
+  solution without all this `get`/`set` nonsense.
+
 ## Installation
 
     $ component install timoxley/model
